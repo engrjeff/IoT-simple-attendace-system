@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Websocket client</title>
+  </head>
+  <body>
+    <h1>Websocket Client</h1>
+    <label for="">Received from Server</label>
+    <div
+      id="rxText"
+      style="width: 200px; min-height: 100px; border: 1px solid #333;"
+    ></div>
+    <label for="">Send a message to server</label>
+    <div>
+      <input type="text" id="txText" />
+    </div>
+
+    <script>
+      let socket;
+      let tx;
+      let rx;
+
+      const users = [
+        { id: 1, cardID: "C97E41B8", name: "Jeff Segovia" },
+        { id: 2, cardID: "398E3799", name: "Tin Maquiling" }
+      ];
+      function init() {
+        socket = new WebSocket("ws://jeffespserver.local:81");
+
+        socket.onmessage = function(event) {
+          getReceivedData(event);
+        };
+
+        tx = document.getElementById("txText");
+        rx = document.getElementById("rxText");
+
+        tx.addEventListener("keydown", evt => {
+          if (evt.keyCode === 13) {
+            socket.send(evt.target.value);
+            evt.target.value = "";
+          }
+        });
+      }
+
+      function getReceivedData(event) {
+        let msg = "";
+        if (event.data !== "\n") {
+          msg += event.data;
+        }
+
+        const cardID = msg.substr(msg, 8);
+        rx.textContent = cardID;
+        sendResponse(cardID);
+      }
+
+      function sendResponse(cardID) {
+        const user =
+          users.find(u => u.cardID === cardID) || "No user with the sent ID";
+        socket.send(JSON.stringify(user));
+      }
+      window.onload = function() {
+        init();
+      };
+    </script>
+  </body>
+</html>
